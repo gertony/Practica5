@@ -14,6 +14,7 @@ class Libro
         int stock;
 
     public:
+        Libro() : titulo(" "), isbn(0), publicationyear(0), autor(" "), stock(0) {}
         Libro(string titulo, int isbn, int publicationyear, string autor, int stock)
         {
             this->titulo = titulo;
@@ -28,48 +29,21 @@ class Libro
             stock = newStock;
         }
 
-        int getStock()
+        int getStock() const
         {
             return stock;
         }
 
-        string getTitulo()
+        string getTitulo() const
         {
             return titulo;
         }
 
-        string getAutor()
+        string getAutor() const
         {
             return autor;
         }
 
-};
-
-class Autor
-{
-    private:
-        string nombre;
-        string nacionalidad;
-        vector <Libro> librosEscritos;
-
-    public:
-        Autor(string nombre, string nacionalidad)
-        {
-            this->nombre = nombre;
-            this->nacionalidad = nacionalidad;
-        }
-
-        void identificarLibros(vector <Libro> x, int tamaño)
-        {   
-            for(int i=0; i<tamaño; i++ )
-            {
-                if(x[i].getAutor() == nombre)
-                {
-                    librosEscritos.push_back(lista[i]);
-                    cout << "El libro " << lista[i].getTitulo() << " es de autoria de " << nombre << endl;
-                }
-            }
-        }
 };
 
 class Usuario
@@ -78,7 +52,7 @@ class Usuario
         string nombre;
         string direccion;
         int telefono;
-        vector <Libro> librosPrestados;
+        vector <Libro*> librosPrestados;
         
     public:
         Usuario(string nombre, string direccion, int telefono)
@@ -88,36 +62,32 @@ class Usuario
             this->telefono = telefono;
         }
 
-        void devolverLibro(Libro* x, string fecha)
+        Usuario& devolverLibro(Libro* x, string fecha)
         {
-            for(int  i=0;i < librosPrestados.size(); i++)
+            for(int i=0;i < librosPrestados.size(); i++)
             {
-                if(librosPrestados[i].getTitulo() == x->getTitulo())
+                if(librosPrestados[i]->getTitulo() == x->getTitulo())
                 {
                     x->setStock(x->getStock()+1);
                     librosPrestados.erase(librosPrestados.begin() + i);
                     break;
                 }
                 else
-                    cout<<"No tienes este libro en prestamo";
+                    cout<<"No tienes este libro en prestamo"<<endl;
             }
+            return *this;
         }
 
-        void verLibrosEnPrestamo()
+        void verLibrosEnPrestamo() const
         {
             cout << "Libros que tienes en prestamo: " << endl;
             for(int i=0;i<librosPrestados.size();i++)
             {
-                cout<<librosPrestados[i].getTitulo()<<endl;
+                cout<<librosPrestados[i]->getTitulo()<<endl;
             }
         }
-
-        vector <Libro> getLibroPrestados()
-        {
-            return librosPrestados;
-        }
         
-        void appendLibro(Libro x)
+        void appendLibro(Libro* x)
         {
             librosPrestados.push_back(x);
         }
@@ -129,53 +99,50 @@ class Biblioteca
         vector <Libro> libros;
 
     public:
-        void agregarLibros(Libro libros_[], int tamaño)
+        Biblioteca() : libros(vector<Libro>()) {}
+        Biblioteca& agregarLibros(const Libro& x)
         {
-            for(int i=0; i<tamaño; i++)
-            {
-                libros.push_back(libros_[i]);
-            }
+            libros.push_back(x);
+            return *this;
         }
 
-        void prestarLibro(Libro* x, Usuario* y,string fecha)
+        Biblioteca& prestarLibro(Libro& x, Usuario& y)
         {   
-            if(x->getStock() > 0)
+            if(x.getStock() > 0)
             {   
-                    x->setStock(x->getStock()-1);
-                    y->appendLibro(*x);
-                    cout << "Se realizo el prestamo de "<<x->getTitulo()<<" el: "<<fecha<<endl;
+                    x.setStock(x.getStock()-1);
+                    y.appendLibro(&x);
+                    cout << "Se realizo el prestamo de "<<x.getTitulo();
             }
             else 
-                cout << "No tenemos mas unidades de:" <<x->getTitulo()<<endl;
+                cout << "No tenemos mas unidades de:" <<x.getTitulo()<<endl;
+            return *this;
+        }
+
+        Biblioteca& StockLibros() 
+        {
+            cout << "Libros Disponibles: " << endl; 
+            for(int i=0; i < libros.size(); i++)
+            {
+                cout << "Titulo: " << libros[i].getTitulo() << endl;
+                cout << "Stock: "<< libros[i].getStock() << endl;
+                cout << "-----------------------------------" << endl << endl;
+            }
+            return *this;
         }
 };
 
+
 int main()
 {   
-    Libro libros[3] = {
-        Libro("Harry Potter I",12345,2001,"J.K Rowling",8),
-        Libro("Harry Potter II",54321,2006,"J.K Rowling",1),
-        Libro("Bazar de los malos sueños",12345,2001,"Stephen King",0)
-    };
-
-    Autor autores[2] = {
-        Autor("J.K Rowling","Britanica"),
-        Autor("Stephen King","Estadounidense")
-    };
+    Libro libro1("Harry Potter I",12345,2001,"J.K Rowling",8);
+    Libro libro2("Harry Potter II",54321,2006,"J.K Rowling",1);
+    Libro libro3("Bazar de los malos sueños",12345,2001,"Stephen King",0);
 
     Usuario usuario1("Jose","La Arboleda 507",945876334);
     Biblioteca biblio1;
 
-    biblio1.agregarLibros(libros,3);
-    autores[0].identificarLibros(libros, 3);
-    autores[1].identificarLibros(libros, 3);
-    cout << libros[0].getStock() << endl;
-    biblio1.prestarLibro(&libros[0],&usuario1, "16/04/2023");
-    biblio1.prestarLibro(&libros[2],&usuario1, "16/04/2023");
-     usuario1.verLibrosEnPrestamo();
-    cout << libros[0].getStock() << endl;
-    usuario1.devolverLibro(&libros[0],"17/04/2023");
-    cout << libros[0].getStock() << endl;
-    usuario1.verLibrosEnPrestamo();
-    return 0;  
+    biblio1.agregarLibros(libro1).agregarLibros(libro2).agregarLibros(libro3).StockLibros();
+
+    return 0;
 }
